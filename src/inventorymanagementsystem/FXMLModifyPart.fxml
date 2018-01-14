@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane id="AnchorPane" fx:id="modifyPartWindow" prefHeight="450.0" prefWidth="450.0" styleClass="mainFxmlClass" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="inventorymanagementsystem.FXMLModifyPartController">
+    <stylesheets>
+        <URL value="@IMS.css" />
+    </stylesheets>
+   <children>
+      <Label layoutX="37.0" layoutY="50.0" text="Modify Part">
+         <font>
+            <Font name="System Bold" size="14.0" />
+         </font>
+      </Label>
+      <RadioButton fx:id="modifyPartOutsourcedRadioButton" layoutX="251.0" layoutY="52.0" mnemonicParsing="false" onAction="#modifyPartOutsourcedRadioButtonSelected" text="Outsourced">
+         <toggleGroup>
+            <ToggleGroup fx:id="modifyPart" />
+         </toggleGroup>
+      </RadioButton>
+      <RadioButton fx:id="modifyPartInHouseRadioButton" layoutX="155.0" layoutY="52.0" mnemonicParsing="false" onAction="#modifyPartInHouseRadioButtonSelected" selected="true" text="In-House" toggleGroup="$modifyPart" />
+      <Label layoutX="67.0" layoutY="160.0" text="Name" />
+      <Label layoutX="67.0" layoutY="118.0" text="ID" />
+      <TextField fx:id="modifyPartIDEntry" disable="true" layoutX="164.0" layoutY="110.0" prefHeight="36.0" prefWidth="149.0" promptText="Auto Gen - Disabled">
+         <font>
+            <Font name="System Italic" size="12.0" />
+         </font>
+      </TextField>
+      <TextField fx:id="modifyPartNameEntry" layoutX="164.0" layoutY="152.0" prefHeight="34.0" prefWidth="148.0" promptText="Part Name" />
+      <TextField fx:id="modifyPartInvEntry" layoutX="164.0" layoutY="200.0" prefHeight="34.0" prefWidth="149.0" promptText="Inv" />
+      <TextField fx:id="modifyPartPriceEntry" layoutX="164.0" layoutY="244.0" prefHeight="34.0" prefWidth="149.0" promptText="Price/Cost" />
+      <TextField fx:id="modifyPartMaxEntry" layoutX="164.0" layoutY="288.0" prefHeight="34.0" prefWidth="70.0" promptText="Max" />
+      <TextField fx:id="modifyPartMinEntry" layoutX="293.0" layoutY="288.0" prefHeight="34.0" prefWidth="70.0" promptText="Min" />
+      <TextField fx:id="modifyPartCompNameEntry" layoutX="164.0" layoutY="329.0" prefHeight="34.0" prefWidth="149.0" promptText="Comp Nm" />
+      <Button fx:id="modifyPartCancelButton" layoutX="350.0" layoutY="388.0" mnemonicParsing="false" onAction="#modifyPartCancelButtonClicked" text="Cancel" />
+      <Button fx:id="modifyPartSaveButton" layoutX="255.0" layoutY="388.0" mnemonicParsing="false" onAction="#modifyPartSaveButtonClicked" text="Save" />
+      <Label layoutX="67.0" layoutY="208.0" text="Inv" />
+      <Label layoutX="67.0" layoutY="252.0" text="Price/Cost" />
+      <Label layoutX="67.0" layoutY="296.0" text="Max" />
+      <Label fx:id="modifyCompanyNameLabel" layoutX="67.0" layoutY="337.0" text="Company Name" visible="false" />
+      <Label layoutX="251.0" layoutY="296.0" text="Min" />
+      <TextField fx:id="modifyPartMachIDEntry" layoutX="164.0" layoutY="329.0" prefHeight="34.0" prefWidth="149.0" promptText="Mach ID" />
+      <Label fx:id="modifyMachineIDLabel" layoutX="67.0" layoutY="337.0" text="Machine ID" />
+   </children>
+</AnchorPane>
