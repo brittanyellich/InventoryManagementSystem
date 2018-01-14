@@ -7,6 +7,7 @@ package inventorymanagementsystem;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,7 +17,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableView;
@@ -61,11 +65,6 @@ public class FXMLAddPartController implements Initializable {
     private TextField addPartMachIDEntry;
     @FXML
     private Label machineIDLabel;
-//    @FXML
-//    private TableView<Part> mainPartTable;
-//    @FXML
-//    public ObservableList<Part> partData =FXCollections.observableArrayList();
-
     
 
     /**
@@ -115,12 +114,28 @@ public class FXMLAddPartController implements Initializable {
         addPartIDEntry.setText(partIDText);
         //Get data from add part entries
         String partName = addPartNameEntry.getText();
-        String partInStock = addPartInvEntry.getText();
-        String partPrice = addPartPriceEntry.getText();
-        String partMax = addPartMaxEntry.getText();
-        String partMin = addPartMinEntry.getText();
+        int partInStock = new Integer(addPartInvEntry.getText());
+        double partPrice = new Double(addPartPriceEntry.getText());
+        int partMax = new Integer(addPartMaxEntry.getText());
+        int partMin = new Integer(addPartMinEntry.getText());
         String partCompName = addPartCompNameEntry.getText();
         String partMachID = addPartMachIDEntry.getText();
+        //Check exception controls
+        if(partInStock < partMin || partInStock > partMax){
+           Alert inventoryAlert = new Alert(AlertType.WARNING);
+           inventoryAlert.setTitle("Inventory Warning");
+           inventoryAlert.setHeaderText("There was a problem");
+           inventoryAlert.setContentText("Inventory must be greater than the minimum and less than the maximum for the part!");
+           
+           inventoryAlert.showAndWait();
+        } else if(partMin > partMax) {
+           Alert valueAlert = new Alert(AlertType.WARNING);
+           valueAlert.setTitle("Value Warning");
+           valueAlert.setHeaderText("There was a problem");
+           valueAlert.setContentText("Part Maximum must be larger than Part Minimum!");
+           
+           valueAlert.showAndWait();
+        } else {
         //Determine which radio button is selected
         RadioButton selectedRadioButton = (RadioButton) addPart.getSelectedToggle();
         String toggle = selectedRadioButton.getText();
@@ -128,14 +143,14 @@ public class FXMLAddPartController implements Initializable {
         if(toggle.equals("In-House")){
             System.out.println("Adding In-House Part!");
             Inventory.addPart(new Inhouse(partID, partName, 
-                Integer.parseInt(partInStock), Double.parseDouble(partPrice), 
-                Integer.parseInt(partMax),Integer.parseInt(partMin), 
+                partInStock, partPrice, 
+                partMax,partMin, 
                 Integer.parseInt(partMachID)));
         }else if (toggle.equals("Outsourced")){
             System.out.println("Adding Outsourced Part!");
             Inventory.addPart(new Outsourced(partID, partName, 
-                Integer.parseInt(partInStock), Double.parseDouble(partPrice), 
-                Integer.parseInt(partMax),Integer.parseInt(partMin), 
+                partInStock, partPrice, 
+                partMax,partMin, 
                 partCompName));
         }
         //Replace the text with blanks in each text entry
@@ -147,12 +162,25 @@ public class FXMLAddPartController implements Initializable {
         addPartMinEntry.setText("");
         addPartCompNameEntry.setText(""); 
         addPartMachIDEntry.setText("");
+        Stage stage = (Stage) addPartSaveButton.getScene().getWindow();
+        stage.close();
+        }
     }
 
     @FXML
     private void addPartCancelButtonClicked(ActionEvent event) throws IOException {
-        Stage stage = (Stage) addPartCancelButton.getScene().getWindow();
-        stage.close();
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Please confirm");
+        confirm.setHeaderText("Part will not be saved");
+        confirm.setContentText("Are you sure you wish to exit without saving?");
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.get() == ButtonType.OK){
+            Stage stage = (Stage) addPartCancelButton.getScene().getWindow();
+            stage.close();
+        } else {
+            // ... user chose CANCEL or closed the dialog
+        }
     }
     
 }

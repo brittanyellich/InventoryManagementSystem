@@ -7,6 +7,7 @@ package inventorymanagementsystem;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -17,6 +18,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
@@ -72,9 +74,6 @@ public class FXMLModifyPartController implements Initializable {
     private Inhouse Inhouse;
     private Outsourced Outsourced;
     
-//    private int selectedPart = FXMLDocumentController.selectedPartID;
-    
-
     /**
      * Initializes the controller class.
      */
@@ -88,16 +87,12 @@ public class FXMLModifyPartController implements Initializable {
         //Lookup part in the parts observable array
         Part partToModify = Inventory.lookupPart(selectedPartID);
         System.out.println(partToModify);
-        //Determine if the part is in-house or outsourced
-//        if(partToModify.getMachineID() == null)
         //Add data to the entries for modifying
         modifyPartNameEntry.setText(partToModify.getPartName().toString());
         modifyPartInvEntry.setText(new Integer(partToModify.getPartInStock()).toString());
         modifyPartPriceEntry.setText(new Double(partToModify.getPartPrice()).toString());
         modifyPartMaxEntry.setText(new Integer(partToModify.getPartMax()).toString());
         modifyPartMinEntry.setText(new Integer(partToModify.getPartMin()).toString());
-//        modifyPartCompNameEntry.setText(partToModify.getCompanyName().toString());
-//        modifyPartMachIDEntry.setText(new Integer(partToModify.getMachineID()).toString());
     }    
     
     @FXML
@@ -130,8 +125,18 @@ public class FXMLModifyPartController implements Initializable {
 
     @FXML
     private void modifyPartCancelButtonClicked(ActionEvent event) throws IOException {
-        Stage stage = (Stage) modifyPartCancelButton.getScene().getWindow();
-        stage.close();
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Please confirm");
+        confirm.setHeaderText("Part will not be saved");
+        confirm.setContentText("Are you sure you wish to exit without saving?");
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.get() == ButtonType.OK){
+            Stage stage = (Stage) modifyPartCancelButton.getScene().getWindow();
+            stage.close();
+        } else {
+            // ... user chose CANCEL or closed the dialog
+        }
     }
 
     @FXML
@@ -140,12 +145,27 @@ public class FXMLModifyPartController implements Initializable {
         //Populate data with the part information
         int partID = new Integer(modifyPartIDEntry.getText());
         String partName = modifyPartNameEntry.getText();
-        String partInStock = modifyPartInvEntry.getText();
-        String partPrice = modifyPartPriceEntry.getText();
-        String partMax = modifyPartMaxEntry.getText();
-        String partMin = modifyPartMinEntry.getText();
+        int partInStock = new Integer(modifyPartInvEntry.getText());
+        double partPrice = new Double(modifyPartPriceEntry.getText());
+        int partMax = new Integer(modifyPartMaxEntry.getText());
+        int partMin = new Integer(modifyPartMinEntry.getText());
         String partCompName = modifyPartCompNameEntry.getText();
         String partMachID = modifyPartMachIDEntry.getText();
+        if(partInStock < partMin || partInStock > partMax){
+           Alert inventoryAlert = new Alert(Alert.AlertType.WARNING);
+           inventoryAlert.setTitle("Inventory Warning");
+           inventoryAlert.setHeaderText("There was a problem");
+           inventoryAlert.setContentText("Inventory must be greater than the minimum and less than the maximum for the part!");
+           
+           inventoryAlert.showAndWait();
+        } else if(partMin > partMax) {
+           Alert valueAlert = new Alert(Alert.AlertType.WARNING);
+           valueAlert.setTitle("Value Warning");
+           valueAlert.setHeaderText("There was a problem");
+           valueAlert.setContentText("Part Maximum must be larger than Part Minimum!");
+           
+           valueAlert.showAndWait();
+        } else {
         //Determine which radio button is selected
         RadioButton selectedRadioButton = (RadioButton) modifyPart.getSelectedToggle();
         String toggle = selectedRadioButton.getText();
@@ -153,17 +173,20 @@ public class FXMLModifyPartController implements Initializable {
         if(toggle.equals("In-House")){
             System.out.println("Modifying In-House Part!");
             Inhouse modifiedInHousePart = new Inhouse(partID, partName, 
-                Integer.parseInt(partInStock), Double.parseDouble(partPrice), 
-                Integer.parseInt(partMax),Integer.parseInt(partMin), 
+                partInStock, partPrice, 
+                partMax,partMin, 
                 Integer.parseInt(partMachID));
             Inventory.updatePart(partID, modifiedInHousePart);
         }else if (toggle.equals("Outsourced")){
             System.out.println("Modifying Outsourced Part!");
             Outsourced modifiedOutsourcedPart = new Outsourced(partID, partName, 
-                Integer.parseInt(partInStock), Double.parseDouble(partPrice), 
-                Integer.parseInt(partMax),Integer.parseInt(partMin), 
+                partInStock, partPrice, 
+                partMax,partMin, 
                 partCompName);
             Inventory.updatePart(partID, modifiedOutsourcedPart);
+        }
+        Stage stage = (Stage) modifyPartSaveButton.getScene().getWindow();
+        stage.close();
         }
     }
 }

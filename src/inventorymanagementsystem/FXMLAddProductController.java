@@ -7,6 +7,7 @@ package inventorymanagementsystem;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,6 +20,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -121,6 +123,8 @@ public class FXMLAddProductController implements Initializable {
         addedPartInvCol.setCellValueFactory(cellData -> cellData.getValue().PartInStockProperty().asObject());
         addedPartPriceCol.setCellValueFactory(cellData -> cellData.getValue().PartPriceProperty().asObject());
         addedPartProductTable.setItems(addingParts); 
+        
+        addProductInvEntry.setText("0");
     }    
 
     @FXML
@@ -192,15 +196,36 @@ public class FXMLAddProductController implements Initializable {
     @FXML
     private void addProductDeleteButtonClicked(ActionEvent event) {
         System.out.println("Add Product Delete Button Clicked!");
-        //Delete selected part from addedPartProductTable from the ObservableArray for the selected product
-        int selectedPartID = productPartTable.getSelectionModel().getSelectedItem().getPartID();
-        addingParts.remove(Inventory.lookupPart(selectedPartID));
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Please confirm");
+        confirm.setHeaderText("Please confirm");
+        confirm.setContentText("Are you sure you want to remove this part?");
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.get() == ButtonType.OK){
+            //Delete selected part from addedPartProductTable from the ObservableArray for the selected product
+            int selectedPartID = productPartTable.getSelectionModel().getSelectedItem().getPartID();
+            addingParts.remove(Inventory.lookupPart(selectedPartID));
+        } else {
+            // ... user chose CANCEL or closed the dialog
+        }
+        
     }
 
     @FXML
     private void addProductCancelButtonClicked(ActionEvent event) throws IOException {
-        Stage stage = (Stage) addProductCancelButton.getScene().getWindow();
-        stage.close();
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Please confirm");
+        confirm.setHeaderText("Product will not be saved");
+        confirm.setContentText("Are you sure you wish to exit without saving?");
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.get() == ButtonType.OK){
+            Stage stage = (Stage) addProductCancelButton.getScene().getWindow();
+            stage.close();
+        } else {
+            // ... user chose CANCEL or closed the dialog
+        }
     }
 
     @FXML
@@ -217,16 +242,56 @@ public class FXMLAddProductController implements Initializable {
         addProductIDEntry.setText(productIDText);
         //Get data from add part entries
         String productName = addProductNameEntry.getText();
-        String productInStock = addProductInvEntry.getText();
-        String productPrice = addProductPriceEntry.getText();
+        int productInStock = new Integer(addProductInvEntry.getText());
+        double productPrice = new Double(addProductPriceEntry.getText());
         String productMax = addProductMaxEntry.getText();
         String productMin = addProductMinEntry.getText();
         //Add product to the products ObservableList
         partsToAssociate = addingParts;
+        double sumPartsPrice = 0;
+        for(Part p : partsToAssociate) {
+            sumPartsPrice += p.getPartPrice();
+        }
+        if(productPrice < sumPartsPrice) {
+           Alert priceAlert = new Alert(Alert.AlertType.WARNING);
+           priceAlert.setTitle("Price Warning");
+           priceAlert.setHeaderText("There was a problem");
+           priceAlert.setContentText("Product price must be greater than or equal to sum of individual parts");
+           
+           priceAlert.showAndWait();
+        } else if(partsToAssociate.isEmpty()) {
+           Alert partAlert = new Alert(Alert.AlertType.WARNING);
+           partAlert.setTitle("Part Warning");
+           partAlert.setHeaderText("There was a problem");
+           partAlert.setContentText("Each product must have at least one part!");
+           
+           partAlert.showAndWait();
+        } else if(productName.isEmpty()) {
+           Alert inventoryAlert = new Alert(Alert.AlertType.WARNING);
+           inventoryAlert.setTitle("Product Warning");
+           inventoryAlert.setHeaderText("There was a problem");
+           inventoryAlert.setContentText("Product must have a name");
+           
+           inventoryAlert.showAndWait();
+        } else if(productPrice <= 0 || addProductInvEntry.getText().isEmpty()) {
+           Alert inventoryAlert = new Alert(Alert.AlertType.WARNING);
+           inventoryAlert.setTitle("Product Warning");
+           inventoryAlert.setHeaderText("There was a problem");
+           inventoryAlert.setContentText("Product must have a price");
+           
+           inventoryAlert.showAndWait();
+        } else if(!(productInStock >=0)) {
+           Alert inventoryAlert = new Alert(Alert.AlertType.WARNING);
+           inventoryAlert.setTitle("Product Warning");
+           inventoryAlert.setHeaderText("There was a problem");
+           inventoryAlert.setContentText("Product must have an inventory level");
+           
+           inventoryAlert.showAndWait();
+        } else {
 //        addedPartProductTable.setItems(partsToAssociate);
         System.out.println(partsToAssociate);
-        Product productToAdd = new Product(productID, productName, Integer.parseInt(productInStock), 
-                Double.parseDouble(productPrice), Integer.parseInt(productMax), 
+        Product productToAdd = new Product(productID, productName, productInStock, 
+                productPrice, Integer.parseInt(productMax), 
                 Integer.parseInt(productMin), partsToAssociate);
             Inventory.addProduct(productToAdd);
         //Replace the text with blanks in each text entry
@@ -239,7 +304,7 @@ public class FXMLAddProductController implements Initializable {
         //Close add product
         Stage stage = (Stage) addProductSaveButton.getScene().getWindow();
         stage.close();
-        
+        }
     }
     
 }

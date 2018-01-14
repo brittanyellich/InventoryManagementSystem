@@ -17,12 +17,9 @@ import javafx.collections.ObservableList;
  * @author Britt
  */
 public class Inventory extends Observable {
-//    public ArrayList<Part> allParts = new ArrayList<Part>();
     private static ObservableList<Part> allParts = FXCollections.observableArrayList();
-//These need to be ArrayLists...
-    //Somehow need to reference
     private static ObservableList<Product> products = FXCollections.observableArrayList();
-    private Product Product;
+    private static Product Product;
     private Part Part;
     private Outsourced Outsourced;
     private Inhouse Inhouse;
@@ -30,8 +27,7 @@ public class Inventory extends Observable {
     
     
     public Inventory(){
-//        this.products = FXCollections.observableArrayList();
-//        this.allParts = FXCollections.observableArrayList();
+        //Inventory constructor method
     }
     
     
@@ -42,11 +38,27 @@ public class Inventory extends Observable {
     
     public static boolean removeProduct(int productID) {
         //remove product from the product array list by the productID
-        products.remove(productID);
-            return true;
+        for(Product p:products){
+            if(p.getProductID()== productID){
+                products.remove(p);
+            }
+        }
+        return true;
     }
     
+    public static ObservableList<Part> lookupProductParts(int productID) {
+        //Find product by product ID and lookup associate product parts
+        System.out.println(productID);
+        for(Product p: products){
+            if(p.getProductID()== productID){
+                System.out.println("Associated Parts Are " + p.getAssociatedParts());
+               return p.getAssociatedParts();
+            } 
+        }   return Inventory.getAllParts();
+    }   
+    
     public static Product lookupProduct(int productID) {
+        //Find product by product ID
         for(Product p : products) {
             if(p.getProductID() == productID){
                 return p;
@@ -66,12 +78,12 @@ public class Inventory extends Observable {
     }
     
     public static void addPart(Part newPart) {
-        //add part to the part ArrayList
+        //add part to the part List
         allParts.add(newPart);
     }
    
     public static boolean deletePart(int partID) {
-        //delete part from the part ArrayList
+        //delete part from the part List
         for(Part p:allParts){
             if(p.getPartID()== partID){
                 allParts.remove(p);
@@ -81,7 +93,7 @@ public class Inventory extends Observable {
     }
     
     public static Part lookupPart(int partID) {
-        //lookup the part in the part arraylist
+        //lookup the part in the part list
         for(Part p : allParts) {
             if(p.getPartID() == partID){
                 return p;

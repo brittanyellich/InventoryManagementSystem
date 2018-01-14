@@ -7,6 +7,7 @@ package inventorymanagementsystem;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import javafx.beans.value.ChangeListener;
@@ -22,7 +23,9 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -134,10 +137,9 @@ public class FXMLDocumentController implements Initializable {
         window.showAndWait();
     }
 
-    
-    //Go to the add new part screen
     @FXML
     private void addNewPart(ActionEvent event) throws IOException {
+        //Open add new part screen in new window
         Stage window = new Stage();
         window.initModality(Modality.APPLICATION_MODAL);
         window.setTitle("Add New Part");
@@ -148,10 +150,9 @@ public class FXMLDocumentController implements Initializable {
         window.showAndWait();
     }
 
-    
-    //Search for parts in the part table
     @FXML
     private void searchParts(ActionEvent event) {
+        //Search for parts in the parts table
         searchPartData.removeAll();
         System.out.println("Search parts button clicked!");
         String searchItem=partsSearchBox.getText(); 
@@ -208,13 +209,26 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private void deleteSelectedPart(ActionEvent event) {
+        //Delete selected part
         System.out.println("delete selected part button clicked!");
-        Part selectedPart = mainPartTable.getSelectionModel().getSelectedItem();
-        Inventory.deletePart(selectedPart.getPartID());
+        Alert confirm = new Alert(AlertType.CONFIRMATION);
+        confirm.setTitle("Please confirm");
+        confirm.setHeaderText("Please confirm");
+        confirm.setContentText("Are you sure you want to delete this part?");
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.get() == ButtonType.OK){
+            Part selectedPart = mainPartTable.getSelectionModel().getSelectedItem();
+            Inventory.deletePart(selectedPart.getPartID());
+        } else {
+            // ... user chose CANCEL or closed the dialog
+        }
+        
     }
 
     @FXML
     private void modifySelectedProduct(ActionEvent event) throws IOException {
+        //Open selected product in modify product screen in new window
         selectedProductID = productsMainTable.getSelectionModel().getSelectedItem().getProductID();
         Stage window = new Stage();
         window.initModality(Modality.APPLICATION_MODAL);
@@ -229,18 +243,95 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private void deleteSelectedProduct(ActionEvent event) {
+        //Delete selected product, note that products are required to have a part and you cannot delete a product without a part
         System.out.println("Delete selected product button clicked!");
         Product selectedProduct = productsMainTable.getSelectionModel().getSelectedItem();
-        Inventory.removeProduct(selectedProduct.getProductID());
+        if(!selectedProduct.getAssociatedParts().isEmpty()){
+           Alert partAlert = new Alert(Alert.AlertType.WARNING);
+           partAlert.setTitle("Part Warning");
+           partAlert.setHeaderText("There was a problem");
+           partAlert.setContentText("You cannot delete a product with parts associated with it!");
+           
+           partAlert.showAndWait();
+        } else {
+            System.out.println("delete selected part button clicked!");
+            Alert confirm = new Alert(AlertType.CONFIRMATION);
+            confirm.setTitle("Please confirm");
+            confirm.setHeaderText("Please confirm");
+            confirm.setContentText("Are you sure you want to delete this product?");
+
+            Optional<ButtonType> result = confirm.showAndWait();
+            if (result.get() == ButtonType.OK){
+                Inventory.removeProduct(selectedProduct.getProductID());
+            } else {
+                // ... user chose CANCEL or closed the dialog
+            }
+            
+        }
+        
     }
 
     @FXML
     private void searchProducts(ActionEvent event) {
+        //Search the products table
         System.out.println("Search products button clicked!");
+        
+        searchProductData.removeAll();
+        System.out.println("Search parts button clicked!");
+        String searchItem=productsSearchBox.getText(); 
+          if (searchItem.equals("")){
+            productsMainTable.getItems().clear();
+        }
+          else{
+    boolean found=false;
+    try{
+        int productID=Integer.parseInt(searchItem);
+        for(Product p: Inventory.getAllProducts()){
+            if(Inventory.lookupProduct(productID) == p){
+                System.out.println("This is product "+ productID);
+                found=true;
+                searchProductData.add(p);
+                productsMainTable.setItems(searchProductData);
+            } else {
+            }
+            
+        }
+            if (found==false){
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Information Dialog");
+            alert.setHeaderText("Error!");
+            alert.setContentText("Product not found");
+
+            alert.showAndWait();
+        }
+    }
+    catch(NumberFormatException e){
+        for(Product p: Inventory.getAllProducts()){
+            if(p.getProductName().equals(searchItem)){
+                System.out.println("This is product "+p.getProductID());
+                found=true;
+                searchProductData.add(p);
+                productsMainTable.setItems(searchProductData);
+            }        
+        }
+            if (found==false){
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Information Dialog");
+            alert.setHeaderText("Error");
+            alert.setContentText("Product not found");
+
+            alert.showAndWait();
+        }
+    }
+    }
+    if(productsSearchBox.getText().isEmpty()){
+        productsMainTable.setItems(Inventory.getAllProducts());
+    }
     }
 
     @FXML
     private void addNewProduct(ActionEvent event) throws IOException {
+        //Open add new product screen in new window
         Stage window = new Stage();
         window.initModality(Modality.APPLICATION_MODAL);
         window.setTitle("Add New Product");
@@ -253,8 +344,19 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private void exitIMS(ActionEvent event) {
-        Stage stage = (Stage) exitButton.getScene().getWindow();
-        stage.close();
+        //Exit the program
+        Alert confirm = new Alert(AlertType.CONFIRMATION);
+            confirm.setTitle("Please confirm");
+            confirm.setHeaderText("Please confirm");
+            confirm.setContentText("Are you sure you wish to exit?");
+
+            Optional<ButtonType> result = confirm.showAndWait();
+            if (result.get() == ButtonType.OK){
+                Stage stage = (Stage) exitButton.getScene().getWindow();
+                stage.close();
+            } else {
+                // ... user chose CANCEL or closed the dialog
+            }
     }
     
 }

@@ -7,6 +7,7 @@ package inventorymanagementsystem;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,6 +20,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -78,8 +80,7 @@ public class FXMLModifyProductController implements Initializable {
     private TableColumn<Part, Double> addedProductPartPriceCol;
     
     public ObservableList<Part> searchParts =FXCollections.observableArrayList();
-    
-    
+    public ObservableList<Part> productParts =FXCollections.observableArrayList();
 
     /**
      * Initializes the controller class.
@@ -94,7 +95,7 @@ public class FXMLModifyProductController implements Initializable {
         //Lookup part in the parts observable array
         Product productToModify = Inventory.lookupProduct(selectedProductID);
         System.out.println(productToModify);
-//        //Add data to the entries for modifying
+        //Add data to the entries for modifying
         modifyProductNameEntry.setText(productToModify.getProductName().toString());
         modifyProductInvEntry.setText(new Integer(productToModify.getProductInStock()).toString());
         modifyProductPriceEntry.setText(new Double(productToModify.getProductPrice()).toString());
@@ -108,16 +109,19 @@ public class FXMLModifyProductController implements Initializable {
         allPartPriceCol.setCellValueFactory(cellData -> cellData.getValue().PartPriceProperty().asObject());
         allPartTable.setItems(Inventory.getAllParts()); 
         
+        productParts = Inventory.lookupProductParts(selectedProductID);
+        System.out.println(productParts);
         //Added Part Table Initialization
         addedProductPartIDCol.setCellValueFactory(cellData -> cellData.getValue().PartIDProperty().asObject());
         addedProductPartNameCol.setCellValueFactory(cellData -> cellData.getValue().PartNameProperty());
         addedProductPartInvCol.setCellValueFactory(cellData -> cellData.getValue().PartInStockProperty().asObject());
         addedProductPartPriceCol.setCellValueFactory(cellData -> cellData.getValue().PartPriceProperty().asObject());
-        addedPartModifyProductTable.setItems(Product.getAllAssociatedParts()); 
+        addedPartModifyProductTable.setItems(productParts); 
     }    
 
     @FXML
     private void modifyProductSearchButtonClicked(ActionEvent event) {
+        //Search parts table in modify product screen
         System.out.println("Modify product search button clicked!");
         //Search through allPartTable
         searchParts.removeAll();
@@ -179,36 +183,101 @@ public class FXMLModifyProductController implements Initializable {
         //Add selected part from productPartTable to ObservableArray for a product/to the addedPartProductTable
         int selectedPartID = allPartTable.getSelectionModel().getSelectedItem().getPartID();
         Part partToAdd = Inventory.lookupPart(selectedPartID);
-        Product.addAssociatedPart(partToAdd);
+        productParts.add(partToAdd);
     }
 
     @FXML
     private void modifyProductDeleteButtonClicked(ActionEvent event) {
         System.out.println("Modify product delete button clicked!");
-        //Delete selected part from addedPartProductTable from the ObservableArray for the selected product
-        int selectedPartID = addedPartModifyProductTable.getSelectionModel().getSelectedItem().getPartID();
-        Product.removeAssociatedPart(selectedPartID);
+        //Delete part from the product table
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+            confirm.setTitle("Please confirm");
+            confirm.setHeaderText("Please confirm");
+            confirm.setContentText("Are you sure you want to remove this part?");
+
+            Optional<ButtonType> result = confirm.showAndWait();
+            if (result.get() == ButtonType.OK){
+                //Delete selected part from addedPartProductTable from the ObservableArray for the selected product
+                int selectedPartID = addedPartModifyProductTable.getSelectionModel().getSelectedItem().getPartID();
+                productParts.remove(Inventory.lookupPart(selectedPartID));
+            } else {
+                // ... user chose CANCEL or closed the dialog
+            }
+        
     }
 
     @FXML
     private void modifyProductCancelButtonClicked(ActionEvent event) throws IOException {
-        Stage stage = (Stage) modifyProductCancelButton.getScene().getWindow();
-        stage.close();
+        //Cancel modifying product and return to main screen
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Please confirm");
+        confirm.setHeaderText("Part will not be saved");
+        confirm.setContentText("Are you sure you wish to exit without saving?");
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.get() == ButtonType.OK){
+            Stage stage = (Stage) modifyProductCancelButton.getScene().getWindow();
+            stage.close();
+        } else {
+            // ... user chose CANCEL or closed the dialog
+        }
     }
 
     @FXML
     private void modifyProductSaveButtonClicked(ActionEvent event) {
+        //Save the modified product
         System.out.println("Modify product save button clicked!");
         int productID = new Integer(modifyProductIDEntry.getText());
         String productName = modifyProductNameEntry.getText();
-        String productInStock = modifyProductInvEntry.getText();
-        String productPrice = modifyProductPriceEntry.getText();
+        int productInStock = new Integer(modifyProductInvEntry.getText());
+        double productPrice = new Double(modifyProductPriceEntry.getText());
         String productMax = modifyProductMaxEntry.getText();
         String productMin = modifyProductMinEntry.getText();
+        //Check that entered information is valid
+        double sumPartsPrice = 0;
+        for(Part p : Inventory.lookupProductParts(productID)) {
+            sumPartsPrice += p.getPartPrice();
+        }
+        if(productPrice < sumPartsPrice) {
+           Alert priceAlert = new Alert(Alert.AlertType.WARNING);
+           priceAlert.setTitle("Price Warning");
+           priceAlert.setHeaderText("There was a problem");
+           priceAlert.setContentText("Product price must be greater than or equal to sum of individual parts");
+           
+           priceAlert.showAndWait();
+        }else if(Inventory.lookupProductParts(productID).isEmpty()) {
+           Alert partAlert = new Alert(Alert.AlertType.WARNING);
+           partAlert.setTitle("Part Warning");
+           partAlert.setHeaderText("There was a problem");
+           partAlert.setContentText("Each product must have at least one part!");
+           
+           partAlert.showAndWait();
+        } else if(productName.isEmpty()) {
+           Alert inventoryAlert = new Alert(Alert.AlertType.WARNING);
+           inventoryAlert.setTitle("Product Warning");
+           inventoryAlert.setHeaderText("There was a problem");
+           inventoryAlert.setContentText("Product must have a name");
+           
+           inventoryAlert.showAndWait();
+        } else if(productPrice <= 0) {
+           Alert inventoryAlert = new Alert(Alert.AlertType.WARNING);
+           inventoryAlert.setTitle("Product Warning");
+           inventoryAlert.setHeaderText("There was a problem");
+           inventoryAlert.setContentText("Product must have a price");
+           
+           inventoryAlert.showAndWait();
+        } else if(!(productInStock >=0 || modifyProductInvEntry.getText().isEmpty())) {
+           Alert inventoryAlert = new Alert(Alert.AlertType.WARNING);
+           inventoryAlert.setTitle("Product Warning");
+           inventoryAlert.setHeaderText("There was a problem");
+           inventoryAlert.setContentText("Product must have an inventory level");
+           
+           inventoryAlert.showAndWait();
+        } else {
         //Modify either an inhouse or outsourced part depending on which radio button is selected
-        Product modifiedProduct = new Product(productID, productName, Integer.parseInt(productInStock), 
-                Double.parseDouble(productPrice), Integer.parseInt(productMax), 
-                Integer.parseInt(productMin), Product.getAssociatedParts());
+        Product modifiedProduct = new Product(productID, productName, productInStock, 
+                productPrice, Integer.parseInt(productMax), 
+                Integer.parseInt(productMin), Inventory.lookupProductParts(productID));
             Inventory.updateProduct(productID, modifiedProduct);
         //Replace the text with blanks in each text entry
         modifyProductIDEntry.setText("");
@@ -217,6 +286,9 @@ public class FXMLModifyProductController implements Initializable {
         modifyProductPriceEntry.setText("");
         modifyProductMaxEntry.setText("");
         modifyProductMinEntry.setText("");
+        Stage stage = (Stage) modifyProductSaveButton.getScene().getWindow();
+        stage.close();
+        }
     }
     
 }

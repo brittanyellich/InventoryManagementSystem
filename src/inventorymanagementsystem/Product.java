@@ -16,7 +16,6 @@ import javafx.collections.ObservableList;
  * @author Britt
  */
 public class Product {
-    private static ObservableList<Part> currentProductParts = FXCollections.observableArrayList();
     private static ObservableList<Part> associatedParts = FXCollections.observableArrayList();
     private SimpleIntegerProperty ProductID = new SimpleIntegerProperty(0);
     private SimpleStringProperty ProductName = new SimpleStringProperty("");
@@ -43,7 +42,8 @@ public class Product {
     }
     
     public void setAssociatedParts(ObservableList parts) {
-        associatedParts = this.currentProductParts;
+        //Set list of parts to the associated parts for a product
+        this.associatedParts = parts;
     }
     
     public void setProductID(int productID) {
@@ -110,16 +110,16 @@ public class Product {
         return ProductMin.get();
     }
     
-    public static void addAssociatedPart(Part newPart) {
+    public void addAssociatedPart(Part newPart) {
         //add a part to the arraylist for the product
-        currentProductParts.add(newPart);
+        associatedParts.add(newPart);
     }
     
-    public static boolean removeAssociatedPart(int partID) {
+    public boolean removeAssociatedPart(int partID) {
         //remove a part based on the partID from the product array list
-        for(Part p:currentProductParts){
+        for(Part p:associatedParts){
             if(p.getPartID()== partID){
-                currentProductParts.remove(p);
+                associatedParts.remove(p);
             }
         }
         return true;
@@ -127,7 +127,7 @@ public class Product {
     
     public Part lookupAssociatedPart(int partID) {
         //lookup an associated part in the part array list based on the partID
-        for(Part p : currentProductParts) {
+        for(Part p : associatedParts) {
             if(p.getPartID()== partID){
                 return p;
             } else {
@@ -135,11 +135,8 @@ public class Product {
         } throw new IllegalStateException("ID: " + partID + " is not in the list");
     }
     
-    public static ObservableList<Part> getAssociatedParts() {
-        return currentProductParts;
-    }
-    
-    public static ObservableList<Part> getAllAssociatedParts(){
+    public ObservableList<Part> getAssociatedParts() {
         return associatedParts;
     }
+    
 }
