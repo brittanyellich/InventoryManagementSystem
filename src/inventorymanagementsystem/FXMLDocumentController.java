@@ -230,6 +230,8 @@ public class FXMLDocumentController implements Initializable {
     @FXML
     private void deleteSelectedProduct(ActionEvent event) {
         System.out.println("Delete selected product button clicked!");
+        Product selectedProduct = productsMainTable.getSelectionModel().getSelectedItem();
+        Inventory.removeProduct(selectedProduct.getProductID());
     }
 
     @FXML
