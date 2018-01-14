@@ -99,6 +99,8 @@ public class FXMLAddProductController implements Initializable {
     private Button addProductSaveButton;
     
     public ObservableList<Part> searchParts =FXCollections.observableArrayList();
+    public ObservableList<Part> addingParts =FXCollections.observableArrayList();
+    public Product product;
 
     /**
      * Initializes the controller class.
@@ -118,7 +120,7 @@ public class FXMLAddProductController implements Initializable {
         addedPartNameCol.setCellValueFactory(cellData -> cellData.getValue().PartNameProperty());
         addedPartInvCol.setCellValueFactory(cellData -> cellData.getValue().PartInStockProperty().asObject());
         addedPartPriceCol.setCellValueFactory(cellData -> cellData.getValue().PartPriceProperty().asObject());
-        addedPartProductTable.setItems(Product.getAssociatedParts()); 
+        addedPartProductTable.setItems(addingParts); 
     }    
 
     @FXML
@@ -184,7 +186,7 @@ public class FXMLAddProductController implements Initializable {
         //Add selected part from productPartTable to ObservableArray for a product/to the addedPartProductTable
         int selectedPartID = productPartTable.getSelectionModel().getSelectedItem().getPartID();
         Part partToAdd = Inventory.lookupPart(selectedPartID);
-        Product.addAssociatedPart(partToAdd);
+        addingParts.add(partToAdd);
     }
 
     @FXML
@@ -192,7 +194,7 @@ public class FXMLAddProductController implements Initializable {
         System.out.println("Add Product Delete Button Clicked!");
         //Delete selected part from addedPartProductTable from the ObservableArray for the selected product
         int selectedPartID = productPartTable.getSelectionModel().getSelectedItem().getPartID();
-        Product.removeAssociatedPart(selectedPartID);
+        addingParts.remove(Inventory.lookupPart(selectedPartID));
     }
 
     @FXML
@@ -207,6 +209,7 @@ public class FXMLAddProductController implements Initializable {
 //        Save product to the mainProductTable on the DocumentController screen
 //        Get details from text entries
 //        Set Product ID to auto-increment
+        ObservableList<Part> partsToAssociate =FXCollections.observableArrayList();
         int productID = 1;
         int i = Inventory.getAllProducts().size();
         productID+= i;
@@ -219,9 +222,12 @@ public class FXMLAddProductController implements Initializable {
         String productMax = addProductMaxEntry.getText();
         String productMin = addProductMinEntry.getText();
         //Add product to the products ObservableList
+        partsToAssociate = addingParts;
+//        addedPartProductTable.setItems(partsToAssociate);
+        System.out.println(partsToAssociate);
         Product productToAdd = new Product(productID, productName, Integer.parseInt(productInStock), 
                 Double.parseDouble(productPrice), Integer.parseInt(productMax), 
-                Integer.parseInt(productMin), Product.getAssociatedParts());
+                Integer.parseInt(productMin), partsToAssociate);
             Inventory.addProduct(productToAdd);
         //Replace the text with blanks in each text entry
         addProductIDEntry.setText("");
@@ -230,8 +236,9 @@ public class FXMLAddProductController implements Initializable {
         addProductPriceEntry.setText("");
         addProductMaxEntry.setText("");
         addProductMinEntry.setText("");
-        //Clear getAssociatedParts
-        Product.getAssociatedParts().clear();
+        //Close add product
+        Stage stage = (Stage) addProductSaveButton.getScene().getWindow();
+        stage.close();
         
     }
     
