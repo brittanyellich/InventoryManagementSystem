@@ -21,8 +21,9 @@ public class Product {
     private SimpleStringProperty ProductName = new SimpleStringProperty("");
     private SimpleDoubleProperty ProductPrice = new SimpleDoubleProperty(0.0);
     private SimpleIntegerProperty ProductInStock = new SimpleIntegerProperty(0);
-    private SimpleIntegerProperty ProductMin = new SimpleIntegerProperty(0);
     private SimpleIntegerProperty ProductMax = new SimpleIntegerProperty(0);
+    private SimpleIntegerProperty ProductMin = new SimpleIntegerProperty(0);
+    
     
     private Part part;
 
@@ -36,8 +37,8 @@ public class Product {
         setProductID(productID);
         setProductInStock(inv);
         setProductPrice(price);
-        setProductMin(max);
-        setProductMax(min);
+        setProductMax(max);
+        setProductMin(min);
         setAssociatedParts(currentProductParts);
     }
     
